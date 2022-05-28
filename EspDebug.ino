@@ -6,7 +6,7 @@ EspDebug::EspDebug() {
 EspDebug::~EspDebug() {
 //#if defined(ESP8266) || defined(ESP32)
 #ifdef DBG_PRINTER_NET
-  m_DbgServer = NULL;
+  m_DbgServer = 9001;
 #endif
 }
 

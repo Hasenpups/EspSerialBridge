@@ -55,32 +55,32 @@
 
 // prototype RequestHandler
 class EspWiFiRequestHandler :  public RequestHandler {
-  virtual bool canHandle(HTTPMethod method, String uri) { return false; };
-  virtual bool canUpload(String uri) { return false; };
+  virtual bool canHandle(HTTPMethod method, const String& uri) { (void) method; (void) uri; return false; };
+  virtual bool canUpload(const String& uri) { (void) uri; return false; };
 #ifdef ESP8266
-  virtual bool handle(ESP8266WebServer& server, HTTPMethod method, String uri) { return false; };
-  virtual void upload(ESP8266WebServer& server, String uri, HTTPUpload& upload) { };
+  virtual bool handle(ESP8266WebServer& server, HTTPMethod method, const String& uri) { (void) server; (void) method; (void) uri; return false; };
+  virtual void upload(ESP8266WebServer& server, const String& uri, HTTPUpload& upload) { (void) server; (void) uri; (void) upload; };
 #endif
 #ifdef ESP32
-  virtual bool handle(WebServer& server, HTTPMethod method, String uri) { return false; };
-  virtual void upload(WebServer& server, String uri, HTTPUpload& upload) { };
+  virtual bool handle(WebServer& server, HTTPMethod method, const String& uri) { return true; };
+  virtual void upload(WebServer& server, const String& uri, HTTPUpload& upload) { };
 #endif
 
 protected:
 #ifdef ESP8266
-  virtual bool canHandle(ESP8266WebServer& server) { return false; };
+  virtual bool canHandle(ESP8266WebServer& server) { (void) server; return true; };
 #endif
 #ifdef ESP32
-  virtual bool canHandle(WebServer& server) { return false; };
+  virtual bool canHandle(WebServer& server) { return true; };
 #endif
   String getConfigUri() { return "/config"; };
 
   virtual String menuHtml() { return ""; };
   virtual uint8_t menuIdentifiers() { return 0; };
-  virtual String menuIdentifiers(uint8_t identifier) { return ""; };
+  virtual String menuIdentifiers(uint8_t identifier) { (void) identifier; return ""; };
 
   bool mExternalRequestHandler = true;
-  EspWiFiRequestHandler *mNextRequestHandler = NULL;
+  EspWiFiRequestHandler *mNextRequestHandler = nullptr;
 
   bool isExternalRequestHandler() { return mExternalRequestHandler; };
   EspWiFiRequestHandler *getNextRequestHandler() { return mNextRequestHandler ; }
@@ -121,16 +121,16 @@ class EspWiFi {
     public:
       EspWiFiRequestHandlerImpl() { mExternalRequestHandler = false; };
 
-      bool canHandle(HTTPMethod method, String uri);
-      bool canUpload(String uri);
+      bool canHandle(HTTPMethod method, const String& uri);
+      bool canUpload(const String& uri);
       
     #ifdef ESP8266
-      bool handle(ESP8266WebServer& server, HTTPMethod method, String uri);
-      void upload(ESP8266WebServer& server, String uri, HTTPUpload& upload);
+      bool handle(ESP8266WebServer& server, HTTPMethod method, const String& uri);
+      void upload(ESP8266WebServer& server, const String& uri, HTTPUpload& upload);
     #endif
     #ifdef ESP32
-      bool handle(WebServer& server, HTTPMethod method, String uri);
-      void upload(WebServer& server, String uri, HTTPUpload& upload);
+      bool handle(WebServer& server, HTTPMethod method, const String& uri);
+      void upload(WebServer& server, const String& uri, HTTPUpload& upload);
     #endif
       
     } mEspWiFiRequestHandler;
@@ -201,6 +201,8 @@ class EspWiFi {
     void httpHandleDeviceListCss();
     void httpHandleDeviceListJss();
     void httpHandleNotFound();
+
+    void httpHandleDomi();
 
 #ifdef _ESP1WIRE_SUPPORT
     void httpHandleDevices();

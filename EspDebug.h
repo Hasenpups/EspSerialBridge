@@ -84,7 +84,7 @@ class EspDebug : public Stream {
 #if defined(ESP8266) || defined(ESP32)
     HandleInputCallback m_inputCallback = NULL;
 
-    WiFiServer m_DbgServer = NULL;
+    WiFiServer m_DbgServer = 9001;
     WiFiClient m_DbgClient;
     String m_SetupLogData = "";
 #endif

@@ -13,7 +13,7 @@
 //#define _ESPSERIALBRIDGE_TELNET_SUPPORT
 
 #ifdef _ESPSERIALBRIDGE_TELNET_SUPPORT
-  #define _DEBUG_TELNET_IAC
+  // #define _DEBUG_TELNET_IAC
   //#define _DEBUG_TELNET_WILL
   //#define _DEBUG_TELNET_DO
   //#define _DEBUG_TELNET_RESPONSE
@@ -44,13 +44,13 @@ class EspSerialBridge {
     int available();
 
   private:
-    static const unsigned int m_bufferSize=256;
+    static const unsigned int m_bufferSize = 256;
     byte m_buffer[m_bufferSize];
     uint16_t m_inPos = 0;
 //    bool m_enableReceive = true;
     bool m_enableClient = true;
 
-    WiFiServer m_WifiServer = NULL;
+    WiFiServer m_WifiServer = 23;
     WiFiClient m_WifiClient;
 
     bool m_deviceConfigChanged = false;

@@ -3,6 +3,7 @@
 #include "EspWifi.h"
 
 EspWiFi::EspWiFi() {
+
 }
 
 void EspWiFi::setup() {
@@ -83,7 +84,7 @@ void EspWiFi::loopInternal() {
   // process http requests
   server.handleClient();
   if (httpRequestProcessed) {
-    DBG_PRINTF("%d ms\n", (millis() - start));
+    DBG_PRINTF("%ld ms\n", (millis() - start));
     httpRequestProcessed = false;
   }
 }
@@ -322,13 +323,17 @@ void EspWiFi::setupHttp(bool start) {
     return;
   
   DBG_PRINT("starting WebServer");
-  server.addHandler(&mEspWiFiRequestHandler);
-  server.onNotFound(std::bind(&EspWiFi::httpHandleNotFound, this));
+  server.on("/domi", HTTP_GET, std::bind(&EspWiFi::httpHandleDomi, this));
 
 #ifdef _ESP1WIRE_SUPPORT
   server.on("/devices", HTTP_GET, std::bind(&EspWiFi::httpHandleDevices, this));
   server.on("/schedules", HTTP_GET, std::bind(&EspWiFi::httpHandleSchedules, this));
 #endif  // _ESP1WIRE_SUPPORT
+
+  server.addHandler(&mEspWiFiRequestHandler);
+  
+  server.onNotFound(std::bind(&EspWiFi::httpHandleNotFound, this));
+
 
   server.begin(80);
   httpStarted = true;
@@ -336,7 +341,9 @@ void EspWiFi::setupHttp(bool start) {
   DBG_PRINTLN();
 }
 
-bool EspWiFi::EspWiFiRequestHandlerImpl::canHandle(HTTPMethod method, String uri) {
+bool EspWiFi::EspWiFiRequestHandlerImpl::canHandle(HTTPMethod method, const String& uri) {
+  DBG_PRINTLN("canHandle " + uri);
+
   if (method == HTTP_GET && uri == "/")
     return true;
   if ((method == HTTP_GET || method == HTTP_POST) && uri == espWiFi.getConfigUri())
@@ -351,7 +358,7 @@ bool EspWiFi::EspWiFiRequestHandlerImpl::canHandle(HTTPMethod method, String uri
   return false;
 }
 
-bool EspWiFi::EspWiFiRequestHandlerImpl::canUpload(String uri) {
+bool EspWiFi::EspWiFiRequestHandlerImpl::canUpload(const String& uri) {
   if (uri == espWiFi.getOtaUri())
     return true;
 
@@ -359,12 +366,15 @@ bool EspWiFi::EspWiFiRequestHandlerImpl::canUpload(String uri) {
 }
 
 #ifdef ESP8266
-bool EspWiFi::EspWiFiRequestHandlerImpl::handle(ESP8266WebServer& server, HTTPMethod method, String uri) {
+bool EspWiFi::EspWiFiRequestHandlerImpl::handle(__attribute__((unused))ESP8266WebServer& server, HTTPMethod method, const String& uri) {
 #endif
 #ifdef ESP32
-bool EspWiFi::EspWiFiRequestHandlerImpl::handle(WebServer& server, HTTPMethod method, String uri) {
-  void upload(WebServer& server, String uri, HTTPUpload& upload);
+bool EspWiFi::EspWiFiRequestHandlerImpl::handle(__attribute__((unused))WebServer& server, HTTPMethod method, const String& uri) {
+  void upload(__attribute__((unused))WebServer& server, String uri, HTTPUpload& upload);
 #endif
+
+  DBG_PRINTLN("handle: " + uri);
+
   if (method == HTTP_GET && uri == "/") {
     espWiFi.httpHandleRoot();
     return true;
@@ -390,7 +400,7 @@ bool EspWiFi::EspWiFiRequestHandlerImpl::handle(WebServer& server, HTTPMethod me
 }
 
 #ifdef ESP8266
-void EspWiFi::EspWiFiRequestHandlerImpl::upload(ESP8266WebServer& server, String uri, HTTPUpload& upload) {
+void EspWiFi::EspWiFiRequestHandlerImpl::upload(ESP8266WebServer& server, const String& uri, __attribute__((unused))HTTPUpload& upload) {
 #endif
 #ifdef ESP32
 void EspWiFi::EspWiFiRequestHandlerImpl::upload(WebServer& server, String uri, HTTPUpload& upload) {
@@ -615,7 +625,8 @@ void EspWiFi::httpHandleConfig() {
     }
     
     for (uint8_t i=1; i<server.args(); i++) {
-      int value, value2;
+      int value = 0;
+      int value2 = 0;
       bool hasValue = false, hasValue2 = false;
 
       char r = server.argName(i)[0];
@@ -636,6 +647,30 @@ void EspWiFi::httpHandleConfig() {
   
   server.client().setNoDelay(true);
   server.send(200, "text/plain", message);
+  httpRequestProcessed = true;
+}
+
+void EspWiFi::httpHandleDomi() {
+  DBG_PRINT("httpHandleDomi: ");
+  String message = "", devList = "";
+
+  if (server.method() == HTTP_GET) {
+#ifdef _DEBUG_TIMING
+      unsigned long sendStart = micros();
+#endif
+      message = "<html><body><h1>domi</h1></body></html>";
+      server.client().setNoDelay(true);
+      server.send(200, "text/html", message);
+
+#ifdef _DEBUG_TIMING
+      DBG_PRINT("send " + elapTime(sendStart) + " ");
+#endif
+      httpRequestProcessed = true;
+      return;
+  }
+  
+  server.client().setNoDelay(true);
+  server.send(403, "text/plain", "Forbidden");
   httpRequestProcessed = true;
 }
 
@@ -777,7 +812,7 @@ void EspWiFi::registerExternalRequestHandler(EspWiFiRequestHandler *externalRequ
   server.addHandler(externalRequestHandler);
 }
 
-boolean EspWiFi::sendMultiCast(String msg) {
+boolean EspWiFi::sendMultiCast(__attribute__((unused))String msg) {
   boolean result = false;
 
   if (WiFi.status() != WL_CONNECTED)
@@ -901,8 +936,9 @@ void EspWiFi::httpHandleOTAData() {
       DBG_PRINTF(", magic: 0x%0x, size: 0x%0x, speed: 0x%0x\n", otaHeader.magic, ((otaHeader.flash_size_speed & 0xf0) >> 4), (otaHeader.flash_size_speed & 0x0f));
       DBG_FORCE_OUTPUT();
 
-      if (otaHeader.magic != 0xe9)
+      if (otaHeader.magic != 0xe9) {
         ;
+      }
     }
     
     if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {

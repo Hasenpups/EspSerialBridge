@@ -101,7 +101,7 @@ int FlashATmega328::readData(uint8_t *data, size_t dataSize) {
 int FlashATmega328::writeData(uint8_t *data, size_t dataSize) {
   int result = 0, writeData;
 
-  for (int i=0; i<dataSize; i++) {
+  for (size_t i=0; i<dataSize; i++) {
     if ((writeData = Serial.write(data[i])) != 1)
       break;
     result++;
@@ -112,7 +112,7 @@ int FlashATmega328::writeData(uint8_t *data, size_t dataSize) {
 }
 
 bool FlashATmega328::stkGetSync() {
-  unsigned long currMillis = millis();
+  // unsigned long currMillis = millis();
   uint8_t sync[2] = { stkRequestGetSync, stkRequestCrcEOP }, retries = 20;
   bool result = false;
   
@@ -122,7 +122,8 @@ bool FlashATmega328::stkGetSync() {
     readData();
 
     //
-    int writeSync = writeData(sync, sizeof(sync));
+    // int writeSync = writeData(sync, sizeof(sync));
+    writeData(sync, sizeof(sync));
     delay(50);
 
     uint8_t response[2] = { 0x00, 0x00 };
@@ -143,7 +144,8 @@ bool FlashATmega328::stkGetParameter(uint8_t parameter, uint8_t *value) {
   // get parameter
   uint8_t cmd[3] = { stkRequestGetParameter, parameter, stkRequestCrcEOP };
 
-  int wp = writeData(cmd, sizeof(cmd));
+  // int wp = writeData(cmd, sizeof(cmd));
+  writeData(cmd, sizeof(cmd));
   delay(50);
 
   uint8_t response[3] = { 0x00, 0x00, 0x00 };
@@ -160,7 +162,8 @@ bool FlashATmega328::stkGetParameter(uint8_t parameter, uint8_t *value) {
 bool FlashATmega328::stkReadSignature(uint8_t signature[3]) {
   uint8_t cmd[2] = { stkRequestReadSignature, stkRequestCrcEOP };
 
-  int writeSign = writeData(cmd, sizeof(cmd));
+  // int writeSign = writeData(cmd, sizeof(cmd));
+  writeData(cmd, sizeof(cmd));
   delay(50);
 
   uint8_t response[5] = { 0x00, 0x00, 0x00, 0x00, 0x00 };
@@ -179,11 +182,12 @@ bool FlashATmega328::stkEnableProgMode(bool enable) {
   uint8_t cmd[2] = { (enable ? stkRequestEnterProgMode : stkRequestLeaveProgMode), stkRequestCrcEOP }, response[2], retries = 20;
 
   bool sendCmd = true;
-  int wPr;
+  // int wPr;
 
   while (retries > 0) {
     if (sendCmd) {
-      wPr = writeData(cmd, sizeof(cmd));
+      // wPr = writeData(cmd, sizeof(cmd));
+      writeData(cmd, sizeof(cmd));
       delay(50);
       sendCmd = false;
     }
@@ -197,7 +201,7 @@ bool FlashATmega328::stkEnableProgMode(bool enable) {
     switch(response[0]) {
       case stkResponseNoSync:
         DBG_PRINT(" noSync ");
-        if (stkGetSync() == -1)
+        if (!stkGetSync())
           return false;
         sendCmd = true;
         retries--;
@@ -244,9 +248,10 @@ bool FlashATmega328::stkLoadAddress(uint16_t address, bool mapTo16BitAddress) {
     mAddress >>= 1;
   }
   
-  uint8_t cmd[4] = { stkRequestLoadAddress, (mAddress & 0xFF), (mAddress >> 8), stkRequestCrcEOP };
+  uint8_t cmd[4] = { stkRequestLoadAddress, (uint8_t)(mAddress & 0xFF), (uint8_t)(mAddress >> 8), stkRequestCrcEOP };
   
-  int writeSign = writeData(cmd, sizeof(cmd));
+  // int writeSign = writeData(cmd, sizeof(cmd));
+  writeData(cmd, sizeof(cmd));
   delay(50);
 
   uint8_t response[2] = { 0x00, 0x00 };
@@ -279,7 +284,8 @@ bool FlashATmega328::stkProgPage(StkPageMemType pageMemType, uint8_t *data, uint
 bool FlashATmega328::stkReadPage(StkPageMemType pageMemType, uint8_t *data, uint8_t dataSize) {
   uint8_t cmd[5] = { stkRequestReadPage, 0x00, dataSize, pageMemType, stkRequestCrcEOP }, pos = 0;
   
-  int cmdW = writeData(cmd, 5);
+  // int cmdW = writeData(cmd, 5);
+  writeData(cmd, 5);
   delay(50);
 
   uint8_t response[2] = { 0x00, 0x00 };

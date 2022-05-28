@@ -6,7 +6,7 @@ EspSerialBridge::EspSerialBridge() {
 }
 
 EspSerialBridge::~EspSerialBridge() {
-  m_WifiServer = NULL;
+  m_WifiServer = 23;
 }
 
 void EspSerialBridge::begin(uint16_t tcpPort) {
@@ -72,7 +72,7 @@ void EspSerialBridge::loop() {
   }
 
   // copy serial input to buffer
-  while (Serial.available() && (m_inPos + 1 < m_bufferSize)) {
+  while (Serial.available() && (m_inPos + (uint16_t)1 < m_bufferSize)) {
     int data = Serial.read();
     
     if (data >= 0) {
@@ -108,7 +108,7 @@ void EspSerialBridge::loop() {
   }
 
   // input from network
-  int recv;
+  unsigned int recv;
   while (m_enableClient && (recv = m_WifiClient.available()) > 0) {
     byte data[128];      
     int dataRead = m_WifiClient.read(data, (recv >= sizeof(data) ? sizeof(data) : recv));
@@ -171,7 +171,7 @@ void EspSerialBridge::readDeviceConfig() {
   // baud
   String value = deviceConfig.getValue("baud");
   if (value != "") {
-    int newVal = value.toInt();
+    unsigned long newVal = value.toInt();
     if (!m_deviceConfigChanged && m_Baud != newVal)
       m_deviceConfigChanged = true;
     m_Baud = newVal;
@@ -201,7 +201,7 @@ void EspSerialBridge::printDiag(Print& dest) {
   const char *bits[] = { "5", "6", "7", "8" };
   const char *parities[] { "N", "O", "E" };
   const char *stops[] = { "0", "1", "1.5", "2" };
-  dest.printf("serial: baud %d dps %s%s%s tx %d (%d/%d)\n", m_Baud, bits[(m_SerialConfig & UART_NB_BIT_MASK) >> 2]
+  dest.printf("serial: baud %ld dps %s%s%s tx %d (%d/%d)\n", m_Baud, bits[(m_SerialConfig & UART_NB_BIT_MASK) >> 2]
     , parities[(m_SerialConfig & UART_PARITY_MASK)], stops[(m_SerialConfig & UART_NB_STOP_BIT_MASK) >> 4], m_TxPin, Serial.isTxEnabled(), Serial.isRxEnabled());
 
   // client

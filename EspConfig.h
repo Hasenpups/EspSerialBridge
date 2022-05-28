@@ -7,7 +7,8 @@
 
 #include "FS.h"
 
-#ifdef ESP32
+#if defined(ESP32) 
+// || defined(ESP8266)
   #include "SPIFFS.h"
 #endif
 

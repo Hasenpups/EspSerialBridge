@@ -12,7 +12,7 @@ bool IntelHexFormatParser::cancelProcessing() {
   m_EOF = true;
 
   // dump
-  DBG_PRINTF("\nIntelHexFormatParser: cancelProcessing 0x%04x data:\n", m_parsePos);
+  DBG_PRINTF("\nIntelHexFormatParser: cancelProcessing 0x%04lx data:\n", m_parsePos);
   for (int i=0; i<m_bufferPos; i++) {
     if (
       (m_buffer[i] >= 0x30 && m_buffer[i] <= 0x3A) || // numbers (0x30 - 0x39) including recordMark 0x3A

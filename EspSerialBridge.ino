@@ -4,10 +4,10 @@
 #ifdef _DEBUG
 //  #define _DEBUG_TRAFFIC
 //  #define _DEBUG_HEAP
-//  #define _DEBUG_WIFI_SETTINGS  // enable WiFi.setAutoConnect and .printDiag on debug console
-//  #define _DEBUG_ESP            // enable ESP.reset on debug console
+ #define _DEBUG_WIFI_SETTINGS  // enable WiFi.setAutoConnect and .printDiag on debug console
+ #define _DEBUG_ESP            // enable ESP.reset on debug console
 #endif
-//#define _DEBUG_HTTP
+#define _DEBUG_HTTP
 
 // wifi options
 #define _ESP_WIFI_UDP_MULTICAST_DISABLED
@@ -50,15 +50,15 @@ EspDebug espDebug;
 // **********************************************
 class EspSerialBridgeRequestHandler : public EspWiFiRequestHandler {
   public:
-    bool canHandle(HTTPMethod method, String uri) override;
-    bool canUpload(String uri);
+    bool canHandle(HTTPMethod method, const String& uri) override;
+    bool canUpload(const String& uri);
 #ifdef ESP8266
-    bool handle(ESP8266WebServer& server, HTTPMethod method, String uri) override;
-    void upload(ESP8266WebServer& server, String uri, HTTPUpload& upload);
+    bool handle(ESP8266WebServer& server, HTTPMethod method, const String& uri) override;
+    void upload(ESP8266WebServer& server, const String& uri, HTTPUpload& upload);
 #endif
 #ifdef ESP32
-    bool handle(WebServer& server, HTTPMethod method, String uri) override;
-    void upload(WebServer& server, String uri, HTTPUpload& upload);
+    bool handle(WebServer& server, HTTPMethod method, const String& uri) override;
+    void upload(WebServer& server, const String& uri, HTTPUpload& upload);
 #endif
 
   protected:
@@ -107,16 +107,18 @@ class EspSerialBridgeRequestHandler : public EspWiFiRequestHandler {
 
 void setup() {
   setupEspTools();
+  // setLed(true);
 
   espConfig.setup();
   espWiFi.setup();
 
-  espWiFi.registerExternalRequestHandler(&espSerialBridgeRequestHandler);
+  // espWiFi.registerExternalRequestHandler(&espSerialBridgeRequestHandler);
 
   espSerialBridge.begin();
 
   espDebug.begin();
   espDebug.registerInputCallback(handleInputStream);
+  // setLed(false);
 }
 
 void loop(void) {
@@ -144,7 +146,10 @@ void printHeapFree() {
 #endif
 }
 
-void handleInput(char r, bool hasValue, unsigned long value, bool hasValue2, unsigned long value2) {
+void handleInput(char r, __attribute__((unused))bool hasValue, 
+    __attribute__((unused))unsigned long value, 
+    __attribute__((unused))bool hasValue2, 
+    __attribute__((unused))unsigned long value2) {
   switch (r) {
 #ifdef _DEBUG_WIFI_SETTINGS
     case 'a':
@@ -268,34 +273,41 @@ void print_warning(byte type, String msg) {
 // **********************************************
 // * class EspSerialBridgeRequestHandler
 // **********************************************
-bool EspSerialBridgeRequestHandler::canHandle(HTTPMethod method, String uri) {
+bool EspSerialBridgeRequestHandler::canHandle(HTTPMethod method, const String& uri) {
   if (method == HTTP_POST && canUpload(uri))
+    return true;
+  if (method == HTTP_GET && uri == "/domi1")
     return true;
 
   return false;
 }
 
-bool EspSerialBridgeRequestHandler::canUpload(String uri) {
+bool EspSerialBridgeRequestHandler::canUpload(const String& uri) {
   return uri == getOtaAtMegaUri();
 }
 
 #ifdef ESP8266
-bool EspSerialBridgeRequestHandler::handle(ESP8266WebServer& server, HTTPMethod method, String uri) {
+bool EspSerialBridgeRequestHandler::handle(ESP8266WebServer& server, HTTPMethod method, const String& uri) {
 #endif
 #ifdef ESP32
-bool EspSerialBridgeRequestHandler::handle(WebServer& server, HTTPMethod method, String uri) {
+bool EspSerialBridgeRequestHandler::handle(WebServer& server, HTTPMethod method, const String& uri) {
 #endif
 
   if (method == HTTP_POST && uri == getConfigUri() && server.hasArg(menuIdentifierSerial())) {
     uint16_t resultCode;
     String html = handleDeviceConfig(server, &resultCode);
-
+  
     if (html != "") {
       server.client().setNoDelay(true);
       server.send(resultCode, "text/plain", html);
-
+  
       return (httpRequestProcessed = true);
-    }
+    } 
+  }
+  if (method == HTTP_GET && uri == "/domi1") {
+    server.client().setNoDelay(true);
+    server.send(200, "text/plain", "domi1");
+    return (httpRequestProcessed = true);
   }
 
 #ifdef _OTA_ATMEGA328_SERIAL
@@ -320,11 +332,14 @@ bool EspSerialBridgeRequestHandler::handle(WebServer& server, HTTPMethod method,
 }
 
 #ifdef ESP8266
-void EspSerialBridgeRequestHandler::upload(ESP8266WebServer& server, String uri, HTTPUpload& upload) {
+void EspSerialBridgeRequestHandler::upload(ESP8266WebServer& server, const String& uri, HTTPUpload& upload) {
 #endif
 #ifdef ESP32
-void EspSerialBridgeRequestHandler::upload(WebServer& server, String uri, HTTPUpload& upload) {
+void EspSerialBridgeRequestHandler::upload(WebServer& server, const String& uri, HTTPUpload& upload) {
 #endif
+  (void) server;
+  (void) uri;
+  (void) upload;
 #ifdef _OTA_ATMEGA328_SERIAL
   httpHandleOTAatmega328Data(server);
 #endif  // _OTA_ATMEGA328_SERIAL
@@ -593,4 +608,3 @@ void EspSerialBridgeRequestHandler::clearParser() {
 }
 
 #endif  // _OTA_ATMEGA328_SERIAL
-
