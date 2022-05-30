@@ -29,8 +29,8 @@ bool IntelHexFormatParser::cancelProcessing() {
   if (m_Output != NULL) {
     m_Output->close();
     
-    if (SPIFFS.exists(m_Output->name()))
-      SPIFFS.remove(m_Output->name());
+    if (LittleFS.exists(m_Output->name()))
+      LittleFS.remove(m_Output->name());
   }
     
   return false;

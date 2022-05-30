@@ -1,15 +1,14 @@
 #ifndef _ESP_CONFIG_H
 #define _ESP_CONFIG_H
 
-#include "Arduino.h"
+#include <Arduino.h>
 
 #if defined(ESP8266) || defined(ESP32)
 
-#include "FS.h"
+#include <FS.h>
 
-#if defined(ESP32) 
-// || defined(ESP8266)
-  #include "SPIFFS.h"
+#if defined(ESP32)  || defined(ESP8266)
+  #include <LittleFS.h>
 #endif
 
 class EspDeviceConfig;
@@ -26,7 +25,7 @@ public:
   void    unsetAll();
   bool    saveToFile();
   bool    hasChanged() { return configChanged; };
-  bool    spiffsMounted() { return mSpiffsMounted; };
+  bool    littlefsMounted() { return mLittlefsMounted; };
   
   EspDeviceConfig   getDeviceConfig(String deviceName);
   
@@ -37,7 +36,7 @@ protected:
     ConfigList  *next;
   };
 
-  bool          configChanged = false, mSpiffsMounted=false;
+  bool          configChanged = false, mLittlefsMounted=false;
   ConfigList    *first = NULL;
   String        mAppName;
 

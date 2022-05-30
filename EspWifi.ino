@@ -875,7 +875,7 @@ void EspWiFi::printUpdateError() {
 #endif
 }
 
-#ifdef _OTA_NO_SPIFFS
+#ifdef _OTA_NO_LITTLEFS
 
 void EspWiFi::httpHandleOTA() {
   String message = "\n\nhttpHandleOTA: ";
@@ -957,13 +957,13 @@ void EspWiFi::httpHandleOTAData() {
   }
 }
 
-#endif  // _OTA_NO_SPIFFS
+#endif  // _OTA_NO_LITTLEFS
 
-#ifndef _OTA_NO_SPIFFS
+#ifndef _OTA_NO_LITTLEFS
 
 bool EspWiFi::initOtaFile(String filename, String mode) {
-  SPIFFS.begin();
-  otaFile = SPIFFS.open(filename, mode.c_str());
+  LittleFS.begin();
+  otaFile = LittleFS.open(filename, mode.c_str());
 
   if (otaFile)
     otaFileName = filename;
@@ -974,8 +974,8 @@ bool EspWiFi::initOtaFile(String filename, String mode) {
 void EspWiFi::clearOtaFile() {
   if (otaFile)
     otaFile.close();
-  if (SPIFFS.exists(otaFileName))
-    SPIFFS.remove(otaFileName);
+  if (LittleFS.exists(otaFileName))
+    LittleFS.remove(otaFileName);
   otaFileName = "";
 }
 
@@ -983,7 +983,7 @@ void EspWiFi::httpHandleOTA() {
   String message = "\n\nhttpHandleOTA: ";
   bool doUpdate = false;
   
-  if (SPIFFS.exists(otaFileName) && initOtaFile(otaFileName, "r")) {
+  if (LittleFS.exists(otaFileName) && initOtaFile(otaFileName, "r")) {
     message += otaFile.name();
     message += + " (";
     message += otaFile.size();
@@ -1059,7 +1059,7 @@ void EspWiFi::httpHandleOTAData() {
   }
 }
 
-#endif // _OTA_NO_SPIFFS
+#endif // _OTA_NO_LITTLEFS
 
 #endif  // ESP8266 || ESP32
 

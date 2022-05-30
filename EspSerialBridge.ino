@@ -491,7 +491,7 @@ void EspSerialBridgeRequestHandler::httpHandleOTAatmega328(WebServer& server) {
   String message = "\n\nhttpHandleOTAatmega328: ";
   bool doUpdate = false;
   
-  if (SPIFFS.exists(otaFileName) && initOtaFile(otaFileName, "r")) {
+  if (LittleFS.exists(otaFileName) && initOtaFile(otaFileName, "r")) {
     message += otaFile.name();
     message += + " (";
     message += otaFile.size();
@@ -583,8 +583,8 @@ void EspSerialBridgeRequestHandler::httpHandleOTAatmega328Data(WebServer& server
 }
 
 bool EspSerialBridgeRequestHandler::initOtaFile(String filename, String mode) {
-  SPIFFS.begin();
-  otaFile = SPIFFS.open(filename, mode.c_str());
+  LittleFS.begin();
+  otaFile = LITTLittleFSLEFS.open(filename, mode.c_str());
 
   if (otaFile)
     otaFileName = filename;
@@ -595,8 +595,8 @@ bool EspSerialBridgeRequestHandler::initOtaFile(String filename, String mode) {
 void EspSerialBridgeRequestHandler::clearOtaFile() {
   if (otaFile)
     otaFile.close();
-  if (SPIFFS.exists(otaFileName))
-    SPIFFS.remove(otaFileName);
+  if (LittleFS.exists(otaFileName))
+    LittleFS.remove(otaFileName);
   otaFileName = "";
 }
 

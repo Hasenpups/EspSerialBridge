@@ -9,7 +9,7 @@
   #define uint32 uint32_t
 #endif
 
-#define _OTA_NO_SPIFFS  // don't use SPIFFS to store temporary uploaded data
+#define _OTA_NO_LITTLEFS  // don't use LITTLEFS to store temporary uploaded data
 
 #include "Arduino.h"
 
@@ -209,7 +209,7 @@ class EspWiFi {
     void httpHandleSchedules();
 #endif
 
-#ifndef _OTA_NO_SPIFFS
+#ifndef _OTA_NO_LITTLEFS
     bool initOtaFile(String filename, String mode);
     void clearOtaFile();
 #endif

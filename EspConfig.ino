@@ -10,12 +10,12 @@ EspConfig::EspConfig(String appName) {
 }
 
 void EspConfig::setup() {
-  mSpiffsMounted = SPIFFS.begin();
+  mLittlefsMounted = LittleFS.begin();
 
-  if (!mSpiffsMounted) {
-    DBG_PRINT("mount SPIFFS failed! try format ");
-    mSpiffsMounted = (SPIFFS.format() && SPIFFS.begin());
-    DBG_PRINTLN(String(mSpiffsMounted ? "ok" : "failed"));
+  if (!mLittlefsMounted) {
+    DBG_PRINT("mount LittleFS failed! try format ");
+    mLittlefsMounted = (LittleFS.format() && LittleFS.begin());
+    DBG_PRINTLN(String(mLittlefsMounted ? "ok" : "failed"));
     return;
   }
 
@@ -33,11 +33,11 @@ EspConfig::~EspConfig() {
 }
 
 bool EspConfig::openRead() {
-  return (configFile = SPIFFS.open(fileName().c_str(), "r"));
+  return (configFile = LittleFS.open(fileName().c_str(), "r"));
 }
 
 bool EspConfig::openWrite() {
-  return (configFile = SPIFFS.open(fileName().c_str(), "w"));
+  return (configFile = LittleFS.open(fileName().c_str(), "w"));
 }
 
 bool EspConfig::loadData() {
