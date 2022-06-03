@@ -323,7 +323,6 @@ void EspWiFi::setupHttp(bool start) {
     return;
   
   DBG_PRINT("starting WebServer");
-  server.on("/domi", HTTP_GET, std::bind(&EspWiFi::httpHandleDomi, this));
 
 #ifdef _ESP1WIRE_SUPPORT
   server.on("/devices", HTTP_GET, std::bind(&EspWiFi::httpHandleDevices, this));
@@ -647,30 +646,6 @@ void EspWiFi::httpHandleConfig() {
   
   server.client().setNoDelay(true);
   server.send(200, "text/plain", message);
-  httpRequestProcessed = true;
-}
-
-void EspWiFi::httpHandleDomi() {
-  DBG_PRINT("httpHandleDomi: ");
-  String message = "", devList = "";
-
-  if (server.method() == HTTP_GET) {
-#ifdef _DEBUG_TIMING
-      unsigned long sendStart = micros();
-#endif
-      message = "<html><body><h1>domi</h1></body></html>";
-      server.client().setNoDelay(true);
-      server.send(200, "text/html", message);
-
-#ifdef _DEBUG_TIMING
-      DBG_PRINT("send " + elapTime(sendStart) + " ");
-#endif
-      httpRequestProcessed = true;
-      return;
-  }
-  
-  server.client().setNoDelay(true);
-  server.send(403, "text/plain", "Forbidden");
   httpRequestProcessed = true;
 }
 
