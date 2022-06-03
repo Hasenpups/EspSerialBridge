@@ -5,6 +5,7 @@
 
 #if defined(ESP8266) || defined(ESP32)
   #include <FS.h>
+  #include <LittleFS.h>
 
   #define DBG_PRINTER espDebug
   #define DBG_PRINTER_NET

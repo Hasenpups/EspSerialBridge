@@ -107,18 +107,18 @@ class EspSerialBridgeRequestHandler : public EspWiFiRequestHandler {
 
 void setup() {
   setupEspTools();
-  // setLed(true);
+  setLed(true);
 
   espConfig.setup();
   espWiFi.setup();
 
-  // espWiFi.registerExternalRequestHandler(&espSerialBridgeRequestHandler);
+  espWiFi.registerExternalRequestHandler(&espSerialBridgeRequestHandler);
 
   espSerialBridge.begin();
 
   espDebug.begin();
   espDebug.registerInputCallback(handleInputStream);
-  // setLed(false);
+  setLed(false);
 }
 
 void loop(void) {
@@ -149,7 +149,8 @@ void printHeapFree() {
 void handleInput(char r, __attribute__((unused))bool hasValue, 
     __attribute__((unused))unsigned long value, 
     __attribute__((unused))bool hasValue2, 
-    __attribute__((unused))unsigned long value2) {
+    __attribute__((unused))unsigned long value2) 
+{
   switch (r) {
 #ifdef _DEBUG_WIFI_SETTINGS
     case 'a':
@@ -276,8 +277,6 @@ void print_warning(byte type, String msg) {
 bool EspSerialBridgeRequestHandler::canHandle(HTTPMethod method, const String& uri) {
   if (method == HTTP_POST && canUpload(uri))
     return true;
-  if (method == HTTP_GET && uri == "/domi1")
-    return true;
 
   return false;
 }
@@ -303,11 +302,6 @@ bool EspSerialBridgeRequestHandler::handle(WebServer& server, HTTPMethod method,
   
       return (httpRequestProcessed = true);
     } 
-  }
-  if (method == HTTP_GET && uri == "/domi1") {
-    server.client().setNoDelay(true);
-    server.send(200, "text/plain", "domi1");
-    return (httpRequestProcessed = true);
   }
 
 #ifdef _OTA_ATMEGA328_SERIAL
@@ -403,7 +397,8 @@ String EspSerialBridgeRequestHandler::handleDeviceConfig(WebServer& server, uint
 
     uint32_t baud = espSerialBridge.getBaud();
     html += htmlLabel(F("baud"), F("Baud: "));
-    options = htmlOption(F("9600"), F("9600"), baud == 9600);
+    options = htmlOption(F("2400"), F("2400"), baud == 2400);
+    options += htmlOption(F("9600"), F("9600"), baud == 9600);
     options += htmlOption(F("19200"), F("19200"), baud == 19200);
     options += htmlOption(F("38400"), F("38400"), baud == 38400);
     options += htmlOption(F("57600"), F("57600"), baud == 57600);

@@ -72,7 +72,7 @@ void EspSerialBridge::loop() {
   }
 
   // copy serial input to buffer
-  while (Serial.available() && ((m_inPos + 1) < m_bufferSize)) {
+  while ((Serial.available() > 0) && ((m_inPos + 1) < m_bufferSize)) {
     int data = Serial.read();
     
     if (data >= 0) {

@@ -44,7 +44,7 @@ class EspSerialBridge {
     int available();
 
   private:
-    static const unsigned int m_bufferSize = 256;
+    static const uint16_t m_bufferSize = 256;
     byte m_buffer[m_bufferSize];
     uint16_t m_inPos = 0;
 //    bool m_enableReceive = true;
@@ -55,7 +55,7 @@ class EspSerialBridge {
 
     bool m_deviceConfigChanged = false;
     uint8_t m_TxPin = 1;
-    unsigned long m_Baud = 9600;
+    unsigned long m_Baud = 2400;
     SerialConfig m_SerialConfig = SERIAL_8N1;
     uint16_t m_tcpPort;
 
