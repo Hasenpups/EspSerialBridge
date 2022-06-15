@@ -63,6 +63,7 @@ void EspSerialBridge::loop() {
       wifiClient.stop();
     } else {
     // accept new connection
+      setLed(true);
       m_WifiClient = wifiClient;
       m_WifiClient.setNoDelay(true);
 #ifdef _ESPSERIALBRIDGE_TELNET_SUPPORT
@@ -85,6 +86,7 @@ void EspSerialBridge::loop() {
   // we have no client connected (clear buffer)
   if (m_WifiClient.status() == CLOSED) {
     m_inPos = 0;
+    setLed(false);
     return;
   }
 
@@ -161,6 +163,7 @@ void EspSerialBridge::enableClientConnect(bool enable) {
     loop();
     m_WifiClient.stop();
 
+    setLed(false);
     m_inPos = 0;
   }
 }

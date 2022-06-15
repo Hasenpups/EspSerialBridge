@@ -32,7 +32,7 @@
 #include "HelperHTML.h"
 
 #define PROGNAME "EspSerialBridge"
-#define PROGVERS "0.3"
+#define PROGVERS "0.3.1"
 #define PROGBUILD String(__DATE__) + " " + String(__TIME__)
 
 bool httpRequestProcessed     = false;

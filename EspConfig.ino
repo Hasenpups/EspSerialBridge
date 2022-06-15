@@ -40,6 +40,10 @@ bool EspConfig::openWrite() {
   return (configFile = LittleFS.open(fileName().c_str(), "w"));
 }
 
+File EspConfig::getConfigFile() {
+  return LittleFS.open(fileName().c_str(), "r");
+}
+
 bool EspConfig::loadData() {
   bool result = false;
   
@@ -59,7 +63,11 @@ bool EspConfig::loadData() {
 }
 
 String EspConfig::getValue(String name) {
-  String value;
+  return getValue(name, "");
+}
+
+String EspConfig::getValue(String name, String def) {
+  String value = def;
   ConfigList *curr = first;
   while (curr != NULL) {
     if (curr->name == name) {

@@ -20,12 +20,15 @@ public:
 
   void    setup();
   String  getValue(String name);
+  String  getValue(String name, String def);
   void    setValue(String name, String value);
   void    unsetValue(String name);
   void    unsetAll();
   bool    saveToFile();
   bool    hasChanged() { return configChanged; };
   bool    littlefsMounted() { return mLittlefsMounted; };
+
+  File    getConfigFile();
   
   EspDeviceConfig   getDeviceConfig(String deviceName);
   

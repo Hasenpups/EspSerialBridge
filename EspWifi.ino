@@ -35,19 +35,23 @@ void EspWiFi::setupInternal() {
   DBG_PRINT("Hostname: "); DBG_PRINTLN(getHostname());
   DBG_PRINT("MAC:      "); DBG_PRINTLN(WiFi.macAddress());
 
-#ifdef ESP32
+
   // restore wifi connect data
   String ssid = "", password = "";
   
+  ssid = espConfig.getValue("ssid", "");
+  password = base64Decode(espConfig.getValue("pwd", ""));
+#ifdef ESP32
   if (preferences.begin(PrefName, true)) {
     ssid = preferences.getString(PrefSsid, "");
     password = base64Decode(preferences.getString(PrefPwd, ""));
     preferences.end();
-  }  
+  }
+#endif
 
   if (WiFi.SSID() == "" && ssid != "")
     WiFi.begin(ssid.c_str(), password.c_str());
-#endif
+
 
   setupWifi();
 
@@ -105,8 +109,9 @@ void EspWiFi::setupWifi() {
     if (!dns.fromString(espConfig.getValue("dns")))
       dns = INADDR_NONE;
     DBG_PRINTF("using static ip %s mask %s %s\n", ip.toString().c_str(), mask.toString().c_str(), String(WiFi.config(ip, gw, mask, dns) ? "ok" : "").c_str());
-  } else
+  } else {
     DBG_PRINTF("using dhcp %s\n", String(WiFi.config(0U, 0U, 0U) ? "ok" : "").c_str());
+  }
     
   // force wait for connect
   lastWiFiStatus = !(WiFi.status() == WL_CONNECTED);
@@ -177,6 +182,8 @@ void EspWiFi::configWifi() {
   }
   if (WiFi.SSID() != ssid && ssid != "") {
     reconfigWifi(ssid, server.arg("password"));
+    espConfig.setValue("ssid", ssid);
+    espConfig.setValue("pwd" , base64::encode(server.arg("password")));
 #ifdef ESP32
     // store wifi connect data
     if (preferences.begin(PrefName, false)) {
@@ -185,6 +192,10 @@ void EspWiFi::configWifi() {
       preferences.end();
     }
 #endif
+    if (espConfig.hasChanged()) {
+      DBG_PRINT("saving ");
+      espConfig.saveToFile();
+    }
   }
 
   httpRequestProcessed = true;
@@ -210,8 +221,9 @@ void EspWiFi::configNet() {
     espConfig.unsetValue("hostname");
     if (defaultHostname != getHostname())
       setHostname(defaultHostname);
-  } else
+  } else {
     espConfig.setValue("hostname", hostname.c_str());
+  }
   
   IPAddress ip, mask, gw, dns;
 
@@ -253,7 +265,7 @@ void EspWiFi::configNet() {
   DBG_PRINT("\n");
 }
 
-#ifdef ESP32
+#if defined(ESP32) || defined(ESP8266)
 String EspWiFi::base64Decode(String encoded) {
   String result = "";
 
@@ -345,6 +357,8 @@ bool EspWiFi::EspWiFiRequestHandlerImpl::canHandle(HTTPMethod method, const Stri
 
   if (method == HTTP_GET && uri == "/")
     return true;
+  if (method == HTTP_GET && uri == "/configfile")
+    return true;
   if ((method == HTTP_GET || method == HTTP_POST) && uri == espWiFi.getConfigUri())
     return true;
   if (method == HTTP_GET && uri == espWiFi.getDevListCssUri())
@@ -376,6 +390,10 @@ bool EspWiFi::EspWiFiRequestHandlerImpl::handle(__attribute__((unused))WebServer
 
   if (method == HTTP_GET && uri == "/") {
     espWiFi.httpHandleRoot();
+    return true;
+  }
+  if (method == HTTP_GET && uri == "/configfile") {
+    espWiFi.httpHandleConfigfile();
     return true;
   }
   if ((method == HTTP_GET || method == HTTP_POST) && uri == espWiFi.getConfigUri()) {
@@ -446,6 +464,29 @@ void EspWiFi::httpHandleRoot() {
   }
   html += F("</table>");
   message += htmlFieldSet(html, "WiFi");
+
+  server.client().setNoDelay(true);
+  server.send(200, "text/html", htmlBody(message));
+  httpRequestProcessed = true;
+}
+
+void EspWiFi::httpHandleConfigfile() {
+  File cfile = espConfig.getConfigFile();  
+
+  String message = "<br/>";
+  while (cfile.available()) {
+    message += "<pre>";
+    String line = cfile.readStringUntil('\n');
+    if(line.startsWith("'pwd'")) {
+      // TODO: better filtering of password
+      message += "'pwd' = XXX";
+    } else {
+      message += line;
+    }
+    message += "</pre><br/>";
+  }
+  message += "<br/>";
+  cfile.close();
 
   server.client().setNoDelay(true);
   server.send(200, "text/html", htmlBody(message));

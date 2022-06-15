@@ -188,12 +188,14 @@ class EspWiFi {
     void reconfigWifi(String ssid, String password);
     void configNet();
 
-#ifdef ESP32
+#if defined(ESP32) || defined(ESP8266)
     String base64Decode(String encoded);
 #endif
 
     String ipString(IPAddress ip);
     void printUpdateError();
+
+    void httpHandleConfigfile();
 
     void httpHandleRoot();
     void httpHandleConfig();
