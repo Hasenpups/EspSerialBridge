@@ -2,8 +2,7 @@ this is work in progress to get it running.
 
 # EspSerialBridge
 
-* compile with ide 1.8.13 + ESP8266 core for Arduino 3.0.0
-* fixed compile error in "String uptime()"
+* compile with ide 1.8.19 + ESP8266 core for Arduino 3.0.2
 
 ## Configuration - First use
 
