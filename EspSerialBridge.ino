@@ -1,11 +1,11 @@
 #include <Arduino.h>
 
-#define _DEBUG
+//#define _DEBUG
 #ifdef _DEBUG
 //  #define _DEBUG_TRAFFIC
 //  #define _DEBUG_HEAP
- #define _DEBUG_WIFI_SETTINGS  // enable WiFi.setAutoConnect and .printDiag on debug console
- #define _DEBUG_ESP            // enable ESP.reset on debug console
+#define _DEBUG_WIFI_SETTINGS  // enable WiFi.setAutoConnect and .printDiag on debug console
+#define _DEBUG_ESP            // enable ESP.reset on debug console
 #endif
 #define _DEBUG_HTTP
 
@@ -19,10 +19,10 @@
 #endif
 
 #ifdef _OTA_ATMEGA328_SERIAL
-  #include "IntelHexFormatParser.h"
-  #include "FlashATMega328Serial.h"
+#include "IntelHexFormatParser.h"
+#include "FlashATMega328Serial.h"
 
-  IntelHexFormatParser *intelHexFormatParser = NULL;
+IntelHexFormatParser* intelHexFormatParser = NULL;
 #endif
 
 #include "EspConfig.h"
@@ -35,8 +35,8 @@
 #define PROGVERS "0.3.1"
 #define PROGBUILD String(__DATE__) + " " + String(__TIME__)
 
-bool httpRequestProcessed     = false;
-bool optionsChanged           = false;
+bool httpRequestProcessed = false;
+bool optionsChanged = false;
 
 EspConfig espConfig(PROGNAME);
 EspWiFi espWiFi;
@@ -49,58 +49,66 @@ EspDebug espDebug;
 // * class EspSerialBridgeRequestHandler
 // **********************************************
 class EspSerialBridgeRequestHandler : public EspWiFiRequestHandler {
-  public:
-    bool canHandle(HTTPMethod method, const String& uri) override;
-    bool canUpload(const String& uri);
+public:
+  bool canHandle(HTTPMethod method, const String& uri) override;
+  bool canUpload(const String& uri);
 #ifdef ESP8266
-    bool handle(ESP8266WebServer& server, HTTPMethod method, const String& uri) override;
-    void upload(ESP8266WebServer& server, const String& uri, HTTPUpload& upload);
+  bool handle(ESP8266WebServer& server, HTTPMethod method, const String& uri) override;
+  void upload(ESP8266WebServer& server, const String& uri, HTTPUpload& upload);
 #endif
 #ifdef ESP32
-    bool handle(WebServer& server, HTTPMethod method, const String& uri) override;
-    void upload(WebServer& server, const String& uri, HTTPUpload& upload);
+  bool handle(WebServer& server, HTTPMethod method, const String& uri) override;
+  void upload(WebServer& server, const String& uri, HTTPUpload& upload);
 #endif
 
-  protected:
+protected:
 #ifdef ESP8266
-    bool canHandle(ESP8266WebServer& server) override;
+  bool canHandle(ESP8266WebServer& server) override;
 #endif
 #ifdef ESP32
-    bool canHandle(WebServer& server) override;
+  bool canHandle(WebServer& server) override;
 #endif
-    String menuHtml() override;
-    uint8_t menuIdentifiers() override;
-    String menuIdentifiers(uint8_t identifier) override;
-    String menuIdentifierSerial() { return "serial"; };
-    String menuIdentifierOtaAddon() { return "ota-addon"; };
-        
-    String getDevicesUri() { return "/devices"; };
-    String getOtaAtMegaUri() { return "/ota/atmega328.bin"; };
+  String menuHtml() override;
+  uint8_t menuIdentifiers() override;
+  String menuIdentifiers(uint8_t identifier) override;
+  String menuIdentifierSerial() {
+    return "serial";
+  };
+  String menuIdentifierOtaAddon() {
+    return "ota-addon";
+  };
 
-    String handleDeviceList();
+  String getDevicesUri() {
+    return "/devices";
+  };
+  String getOtaAtMegaUri() {
+    return "/ota/atmega328.bin";
+  };
+
+  String handleDeviceList();
 #ifdef ESP8266
-    String handleDeviceConfig(ESP8266WebServer& server, uint16_t *resultCode);
+  String handleDeviceConfig(ESP8266WebServer& server, uint16_t* resultCode);
 #endif
 #ifdef ESP32
-    String handleDeviceConfig(WebServer& server, uint16_t *resultCode);
+  String handleDeviceConfig(WebServer& server, uint16_t* resultCode);
 #endif
 
 #ifdef _OTA_ATMEGA328_SERIAL
-    void clearParser();
+  void clearParser();
 #ifdef ESP8266
-    void httpHandleOTAatmega328(ESP8266WebServer& server);
-    void httpHandleOTAatmega328Data(ESP8266WebServer& server);
+  void httpHandleOTAatmega328(ESP8266WebServer& server);
+  void httpHandleOTAatmega328Data(ESP8266WebServer& server);
 #endif
 #ifdef ESP32
-    void httpHandleOTAatmega328(WebServer& server);
-    void httpHandleOTAatmega328Data(WebServer& server);
+  void httpHandleOTAatmega328(WebServer& server);
+  void httpHandleOTAatmega328Data(WebServer& server);
 #endif
 
-    String otaFileName;
-    File otaFile;
+  String otaFileName;
+  File otaFile;
 
-    bool initOtaFile(String filename, String mode);
-    void clearOtaFile();
+  bool initOtaFile(String filename, String mode);
+  void clearOtaFile();
 #endif  // _OTA_ATMEGA328_SERIAL
 
 } espSerialBridgeRequestHandler;
@@ -146,11 +154,10 @@ void printHeapFree() {
 #endif
 }
 
-void handleInput(char r, __attribute__((unused))bool hasValue, 
-    __attribute__((unused))unsigned long value, 
-    __attribute__((unused))bool hasValue2, 
-    __attribute__((unused))unsigned long value2) 
-{
+void handleInput(char r, __attribute__((unused)) bool hasValue,
+                 __attribute__((unused)) unsigned long value,
+                 __attribute__((unused)) bool hasValue2,
+                 __attribute__((unused)) unsigned long value2) {
   switch (r) {
 #ifdef _DEBUG_WIFI_SETTINGS
     case 'a':
@@ -178,10 +185,10 @@ void handleInput(char r, __attribute__((unused))bool hasValue,
       break;
     default:
       break;
-    }
+  }
 }
 
-void handleInputStream(Stream *input) {
+void handleInputStream(Stream* input) {
   if (input->available() <= 0)
     return;
 
@@ -190,12 +197,14 @@ void handleInputStream(Stream *input) {
   char r = input->read();
 
   // reset variables
-  value = 0; hasValue = false;
-  value2 = 0; hasValue2 = false;
-  
+  value = 0;
+  hasValue = false;
+  value2 = 0;
+  hasValue2 = false;
+
   byte sign = 0;
   // char is a number
-  if ((r >= '0' && r <= '9') || r == '-'){
+  if ((r >= '0' && r <= '9') || r == '-') {
     byte delays = 2;
     while ((r >= '0' && r <= '9') || r == ',' || r == '-') {
       if (r == '-') {
@@ -207,7 +216,7 @@ void handleInputStream(Stream *input) {
             print_warning(2, "format");
             return;
           }
-          
+
           hasValue2 = true;
           if (sign == 0) {
             value = value * -1;
@@ -223,7 +232,7 @@ void handleInputStream(Stream *input) {
           }
         }
       }
-            
+
       // wait a little bit for more input
       while (input->available() <= 0 && delays > 0) {
         delay(20);
@@ -253,7 +262,7 @@ void handleInputStream(Stream *input) {
 // helper
 void print_config() {
   String blank = F(" ");
-  
+
   DBG_PRINT(F("config:"));
   DBG_PRINTLN();
 }
@@ -289,317 +298,322 @@ bool EspSerialBridgeRequestHandler::canUpload(const String& uri) {
 bool EspSerialBridgeRequestHandler::handle(ESP8266WebServer& server, HTTPMethod method, const String& uri) {
 #endif
 #ifdef ESP32
-bool EspSerialBridgeRequestHandler::handle(WebServer& server, HTTPMethod method, const String& uri) {
+  bool EspSerialBridgeRequestHandler::handle(WebServer & server, HTTPMethod method, const String& uri) {
 #endif
 
-  if (method == HTTP_POST && uri == getConfigUri() && server.hasArg(menuIdentifierSerial())) {
-    uint16_t resultCode;
-    String html = handleDeviceConfig(server, &resultCode);
-  
-    if (html != "") {
+    if (method == HTTP_POST && uri == getConfigUri() && server.hasArg(menuIdentifierSerial())) {
+      uint16_t resultCode;
+      String html = handleDeviceConfig(server, &resultCode);
+
+      if (html != "") {
+        server.client().setNoDelay(true);
+        server.send(resultCode, "text/plain", html);
+
+        return (httpRequestProcessed = true);
+      }
+    }
+
+#ifdef _OTA_ATMEGA328_SERIAL
+    if (method == HTTP_POST && uri == getConfigUri() && server.hasArg(menuIdentifierOtaAddon())) {
+      String action = getOtaAtMegaUri();
+      String html = F("<h4>OTA-AddOn</h4>");
+      html += htmlInput("file", "file", "", 0) + htmlNewLine();
+
       server.client().setNoDelay(true);
-      server.send(resultCode, "text/plain", html);
-  
+      server.send(200, "text/plain", htmlForm(html, action, "post", "submitForm", "multipart/form-data"));
+
       return (httpRequestProcessed = true);
-    } 
-  }
+    }
 
-#ifdef _OTA_ATMEGA328_SERIAL
-  if (method == HTTP_POST && uri == getConfigUri() && server.hasArg(menuIdentifierOtaAddon())) {
-    String action = getOtaAtMegaUri();
-    String html = F("<h4>OTA-AddOn</h4>");
-    html += htmlInput("file", "file", "", 0) + htmlNewLine();
-  
-    server.client().setNoDelay(true);
-    server.send(200, "text/plain", htmlForm(html, action, "post", "submitForm", "multipart/form-data"));
-
-    return (httpRequestProcessed = true);
-  }
-
-  if (method == HTTP_POST && uri == getOtaAtMegaUri()) {
-    httpHandleOTAatmega328(server);
-    return httpRequestProcessed;
-  }
+    if (method == HTTP_POST && uri == getOtaAtMegaUri()) {
+      httpHandleOTAatmega328(server);
+      return httpRequestProcessed;
+    }
 #endif  // _OTA_ATMEGA328_SERIAL
-  
-  return false;
-}
+
+    return false;
+  }
 
 #ifdef ESP8266
-void EspSerialBridgeRequestHandler::upload(ESP8266WebServer& server, const String& uri, HTTPUpload& upload) {
+  void EspSerialBridgeRequestHandler::upload(ESP8266WebServer & server, const String& uri, HTTPUpload& upload) {
 #endif
 #ifdef ESP32
-void EspSerialBridgeRequestHandler::upload(WebServer& server, const String& uri, HTTPUpload& upload) {
+    void EspSerialBridgeRequestHandler::upload(WebServer & server, const String& uri, HTTPUpload& upload) {
 #endif
-  (void) server;
-  (void) uri;
-  (void) upload;
+      (void)server;
+      (void)uri;
+      (void)upload;
 #ifdef _OTA_ATMEGA328_SERIAL
-  httpHandleOTAatmega328Data(server);
+      httpHandleOTAatmega328Data(server);
 #endif  // _OTA_ATMEGA328_SERIAL
-}
-    
-#ifdef ESP8266
-bool EspSerialBridgeRequestHandler::canHandle(ESP8266WebServer& server) {
-#endif
-#ifdef ESP32
-bool EspSerialBridgeRequestHandler::canHandle(WebServer& server) {
-#endif
-  if (canHandle(server.method(), server.uri()))
-    return true;
-
-  if (server.method() == HTTP_POST && server.uri() == getConfigUri()) {
-    if (server.hasArg(menuIdentifierSerial()) && (server.arg(menuIdentifierSerial()) == "" || server.arg(menuIdentifierSerial()) == "config"))
-      return true;
-    if (server.hasArg(menuIdentifierOtaAddon()) && server.arg(menuIdentifierOtaAddon()) == "")
-      return true;
-  }
-
-  return false;
-}
-
-String EspSerialBridgeRequestHandler::menuHtml() {
-  return htmlMenuItem(menuIdentifierSerial(), "Serial");
-}
-
-uint8_t EspSerialBridgeRequestHandler::menuIdentifiers() {
-  return 2;
-}
-
-String EspSerialBridgeRequestHandler::menuIdentifiers(uint8_t identifier) {
-  switch(identifier) {
-    case 0: return menuIdentifierSerial();break;
-    case 1: return menuIdentifierOtaAddon();break;
-  }
-
-  return "";
-}
+    }
 
 #ifdef ESP8266
-String EspSerialBridgeRequestHandler::handleDeviceConfig(ESP8266WebServer& server, uint16_t *resultCode) {
+    bool EspSerialBridgeRequestHandler::canHandle(ESP8266WebServer & server) {
 #endif
 #ifdef ESP32
-String EspSerialBridgeRequestHandler::handleDeviceConfig(WebServer& server, uint16_t *resultCode) {
+      bool EspSerialBridgeRequestHandler::canHandle(WebServer & server) {
 #endif
-  String result = "";
-  String reqAction = server.arg(F("action"));
- 
-  if (reqAction != F("form") && reqAction != F("submit"))
-    return result;
+        if (canHandle(server.method(), server.uri()))
+          return true;
 
-  if (reqAction == F("form")) {
-    String action = F("/config?ChipID=");
-    action += getChipID();
-    action += F("&serial=config");
-    action += F("&action=submit");
+        if (server.method() == HTTP_POST && server.uri() == getConfigUri()) {
+          if (server.hasArg(menuIdentifierSerial()) && (server.arg(menuIdentifierSerial()) == "" || server.arg(menuIdentifierSerial()) == "config"))
+            return true;
+          if (server.hasArg(menuIdentifierOtaAddon()) && server.arg(menuIdentifierOtaAddon()) == "")
+            return true;
+        }
 
-    String html = "", options = "";
+        return false;
+      }
 
-    uint32_t baud = espSerialBridge.getBaud();
-    html += htmlLabel(F("baud"), F("Baud: "));
-    options = htmlOption(F("2400"), F("2400"), baud == 2400);
-    options += htmlOption(F("9600"), F("9600"), baud == 9600);
-    options += htmlOption(F("19200"), F("19200"), baud == 19200);
-    options += htmlOption(F("38400"), F("38400"), baud == 38400);
-    options += htmlOption(F("57600"), F("57600"), baud == 57600);
-    options += htmlOption(F("74880"), F("74880"), baud == 74880);
-    options += htmlOption(F("115200"), F("115200"), baud == 115200);
-    html += htmlSelect(F("baud"), options, "") + htmlNewLine();
-    action += F("&baud=");
+      String EspSerialBridgeRequestHandler::menuHtml() {
+        return htmlMenuItem(menuIdentifierSerial(), "Serial");
+      }
 
-    SerialConfig curr = espSerialBridge.getSerialConfig();
-    
-    html += htmlLabel(F("data"), F("Data: "));
-    options = htmlOption(String(UART_NB_BIT_8), F("8"), (curr & UART_NB_BIT_MASK) == UART_NB_BIT_8);
-    options += htmlOption(String(UART_NB_BIT_7), F("7"), (curr & UART_NB_BIT_MASK) == UART_NB_BIT_7);
-    options += htmlOption(String(UART_NB_BIT_6), F("6"), (curr & UART_NB_BIT_MASK) == UART_NB_BIT_6);
-    options += htmlOption(String(UART_NB_BIT_5), F("5"), (curr & UART_NB_BIT_MASK) == UART_NB_BIT_5);
-    html += htmlSelect(String(F("data")), options, "") + htmlNewLine();
-    action += F("&data=");
+      uint8_t EspSerialBridgeRequestHandler::menuIdentifiers() {
+        return 2;
+      }
 
-    html += htmlLabel(F("parity"), F("Parity: "));
-    options = htmlOption(String(UART_PARITY_NONE), F("None"), (curr & UART_PARITY_MASK) == UART_PARITY_NONE);
-    options += htmlOption(String(UART_PARITY_EVEN), F("Even"), (curr & UART_PARITY_MASK) == UART_PARITY_EVEN);
-    options += htmlOption(String(UART_PARITY_ODD), F("Odd"), (curr & UART_PARITY_MASK) == UART_PARITY_ODD);
-    html += htmlSelect(String(F("parity")), options, "") + htmlNewLine();
-    action += F("&parity=");
+      String EspSerialBridgeRequestHandler::menuIdentifiers(uint8_t identifier) {
+        switch (identifier) {
+          case 0: return menuIdentifierSerial(); break;
+          case 1: return menuIdentifierOtaAddon(); break;
+        }
 
-    html += htmlLabel(F("stop"), F("Stop: "));
-    options = htmlOption(String(UART_NB_STOP_BIT_1), F("1"), (curr & UART_NB_STOP_BIT_MASK) == UART_NB_STOP_BIT_1);
-    options += htmlOption(String(UART_NB_STOP_BIT_2), F("2"), (curr & UART_NB_STOP_BIT_MASK) == UART_NB_STOP_BIT_2);
-    html += htmlSelect(String(F("stop")), options, "") + htmlNewLine();
-    action += F("&stop=");
+        return "";
+      }
 
-    uint8_t tx_pin = espSerialBridge.getTxPin();
-    html += htmlLabel("pins", F("TX/RX: "));
-    options = htmlOption(F("normal"), F("normal (1/3)"), tx_pin == 1);
+#ifdef ESP8266
+      String EspSerialBridgeRequestHandler::handleDeviceConfig(ESP8266WebServer & server, uint16_t * resultCode) {
+#endif
+#ifdef ESP32
+        String EspSerialBridgeRequestHandler::handleDeviceConfig(WebServer & server, uint16_t * resultCode) {
+#endif
+          String result = "";
+          String reqAction = server.arg(F("action"));
+
+          if (reqAction != F("form") && reqAction != F("submit"))
+            return result;
+
+          if (reqAction == F("form")) {
+            String action = F("/config?ChipID=");
+            action += getChipID();
+            action += F("&serial=config");
+            action += F("&action=submit");
+
+            String html = "", options = "";
+
+            uint32_t baud = espSerialBridge.getBaud();
+            html += htmlLabel(F("baud"), F("Baud: "));
+            options = htmlOption(F("2400"), F("2400"), baud == 2400);
+            options += htmlOption(F("9600"), F("9600"), baud == 9600);
+            options += htmlOption(F("19200"), F("19200"), baud == 19200);
+            options += htmlOption(F("38400"), F("38400"), baud == 38400);
+            options += htmlOption(F("57600"), F("57600"), baud == 57600);
+            options += htmlOption(F("74880"), F("74880"), baud == 74880);
+            options += htmlOption(F("115200"), F("115200"), baud == 115200);
+            options += htmlOption(F("230400"), F("230400"), baud == 230400);
+            options += htmlOption(F("250000"), F("250000"), baud == 250000);
+            options += htmlOption(F("460800"), F("460800"), baud == 460800);
+            options += htmlOption(F("500000"), F("500000"), baud == 500000);
+            options += htmlOption(F("921600"), F("921600"), baud == 921600);
+            html += htmlSelect(F("baud"), options, "") + htmlNewLine();
+            action += F("&baud=");
+
+            SerialConfig curr = espSerialBridge.getSerialConfig();
+
+            html += htmlLabel(F("data"), F("Data: "));
+            options = htmlOption(String(UART_NB_BIT_8), F("8"), (curr & UART_NB_BIT_MASK) == UART_NB_BIT_8);
+            options += htmlOption(String(UART_NB_BIT_7), F("7"), (curr & UART_NB_BIT_MASK) == UART_NB_BIT_7);
+            options += htmlOption(String(UART_NB_BIT_6), F("6"), (curr & UART_NB_BIT_MASK) == UART_NB_BIT_6);
+            options += htmlOption(String(UART_NB_BIT_5), F("5"), (curr & UART_NB_BIT_MASK) == UART_NB_BIT_5);
+            html += htmlSelect(String(F("data")), options, "") + htmlNewLine();
+            action += F("&data=");
+
+            html += htmlLabel(F("parity"), F("Parity: "));
+            options = htmlOption(String(UART_PARITY_NONE), F("None"), (curr & UART_PARITY_MASK) == UART_PARITY_NONE);
+            options += htmlOption(String(UART_PARITY_EVEN), F("Even"), (curr & UART_PARITY_MASK) == UART_PARITY_EVEN);
+            options += htmlOption(String(UART_PARITY_ODD), F("Odd"), (curr & UART_PARITY_MASK) == UART_PARITY_ODD);
+            html += htmlSelect(String(F("parity")), options, "") + htmlNewLine();
+            action += F("&parity=");
+
+            html += htmlLabel(F("stop"), F("Stop: "));
+            options = htmlOption(String(UART_NB_STOP_BIT_1), F("1"), (curr & UART_NB_STOP_BIT_MASK) == UART_NB_STOP_BIT_1);
+            options += htmlOption(String(UART_NB_STOP_BIT_2), F("2"), (curr & UART_NB_STOP_BIT_MASK) == UART_NB_STOP_BIT_2);
+            html += htmlSelect(String(F("stop")), options, "") + htmlNewLine();
+            action += F("&stop=");
+
+            uint8_t tx_pin = espSerialBridge.getTxPin();
+            html += htmlLabel("pins", F("TX/RX: "));
+            options = htmlOption(F("normal"), F("normal (1/3)"), tx_pin == 1);
 #ifndef _TARGET_ESP_01
-    options += htmlOption(F("swapped"), F("swapped (15/13)"), tx_pin == 15);
+            options += htmlOption(F("swapped"), F("swapped (15/13)"), tx_pin == 15);
 #endif
-    html += htmlSelect(String(F("pins")), options, "") + htmlNewLine();
-    action += F("&pins=");
+            html += htmlSelect(String(F("pins")), options, "") + htmlNewLine();
+            action += F("&pins=");
 
 #ifdef _OTA_ATMEGA328_SERIAL
-    html = htmlFieldSet(html, htmlMenuItem(menuIdentifierOtaAddon(), "OTA"));
+            html = htmlFieldSet(html, htmlMenuItem(menuIdentifierOtaAddon(), "OTA"));
 #else
-    html = htmlFieldSet(html, F("Settings"));
+  html = htmlFieldSet(html, F("Settings"));
 #endif
 
-    if (html != "") {
-      *resultCode = 200;
-      html = "<h4>Serial</h4>" + html;
-      result = htmlForm(html, action, F("post"), F("configForm"), "", "");
-    }
-  }
+            if (html != "") {
+              *resultCode = 200;
+              html = "<h4>Serial</h4>" + html;
+              result = htmlForm(html, action, F("post"), F("configForm"), "", "");
+            }
+          }
 
-  if (reqAction == F("submit")) {
-    EspDeviceConfig deviceConfig = espSerialBridge.getDeviceConfig();
-    
-    deviceConfig.setValue("baud", server.arg("baud"));
-    deviceConfig.setValue("tx", String(server.arg("pins") == "normal" ? 1 : 15));
-    uint8_t dps = 0;
-    dps |= (server.arg("data").toInt() & UART_NB_BIT_MASK);
-    dps |= (server.arg("parity").toInt() & UART_PARITY_MASK);
-    dps |= (server.arg("stop").toInt() & UART_NB_STOP_BIT_MASK);
-    deviceConfig.setValue("dps", String(dps));
+          if (reqAction == F("submit")) {
+            EspDeviceConfig deviceConfig = espSerialBridge.getDeviceConfig();
 
-    if (deviceConfig.hasChanged()) {
-      deviceConfig.saveToFile();
-      espSerialBridge.readDeviceConfig();
-    }
-    
-    *resultCode = 200;
-    result = F("ok");
-  }
+            deviceConfig.setValue("baud", server.arg("baud"));
+            deviceConfig.setValue("tx", String(server.arg("pins") == "normal" ? 1 : 15));
+            uint8_t dps = 0;
+            dps |= (server.arg("data").toInt() & UART_NB_BIT_MASK);
+            dps |= (server.arg("parity").toInt() & UART_PARITY_MASK);
+            dps |= (server.arg("stop").toInt() & UART_NB_STOP_BIT_MASK);
+            deviceConfig.setValue("dps", String(dps));
 
-  return result;
-}
+            if (deviceConfig.hasChanged()) {
+              deviceConfig.saveToFile();
+              espSerialBridge.readDeviceConfig();
+            }
+
+            *resultCode = 200;
+            result = F("ok");
+          }
+
+          return result;
+        }
 
 #ifdef _OTA_ATMEGA328_SERIAL
 
 #ifdef ESP8266
-void EspSerialBridgeRequestHandler::httpHandleOTAatmega328(ESP8266WebServer& server) {
+        void EspSerialBridgeRequestHandler::httpHandleOTAatmega328(ESP8266WebServer & server) {
 #endif
 #ifdef ESP32
-void EspSerialBridgeRequestHandler::httpHandleOTAatmega328(WebServer& server) {
+          void EspSerialBridgeRequestHandler::httpHandleOTAatmega328(WebServer & server) {
 #endif
-  String message = "\n\nhttpHandleOTAatmega328: ";
-  bool doUpdate = false;
-  
-  if (LittleFS.exists(otaFileName) && initOtaFile(otaFileName, "r")) {
-    message += otaFile.name();
-    message += + " (";
-    message += otaFile.size();
-    message += " Bytes) received!";
-    doUpdate = true;
-  } else
-    message += "file doesn't exists (maybe wrong IntelHEX format parsed!)";
+            String message = "\n\nhttpHandleOTAatmega328: ";
+            bool doUpdate = false;
 
-  DBG_PRINTLN(message);
+            if (LittleFS.exists(otaFileName) && initOtaFile(otaFileName, "r")) {
+              message += otaFile.name();
+              message += +" (";
+              message += otaFile.size();
+              message += " Bytes) received!";
+              doUpdate = true;
+            } else
+              message += "file doesn't exists (maybe wrong IntelHEX format parsed!)";
 
-  if (doUpdate) {
-    DBG_PRINT("starting Update: ");
-    DBG_FORCE_OUTPUT();
+            DBG_PRINTLN(message);
 
-    uint8_t txPin = 1;
+            if (doUpdate) {
+              DBG_PRINT("starting Update: ");
+              DBG_FORCE_OUTPUT();
+
+              uint8_t txPin = 1;
 #ifdef _ESPSERIALBRIDGE_SUPPORT
-    espSerialBridge.enableClientConnect(false);
-    txPin = espSerialBridge.getTxPin();
+              espSerialBridge.enableClientConnect(false);
+              txPin = espSerialBridge.getTxPin();
 #endif
 
-    FlashATmega328 flashATmega328(2, txPin);
+              FlashATmega328 flashATmega328(2, txPin);
 
-    flashATmega328.flashFile(&otaFile);
+              flashATmega328.flashFile(&otaFile);
 
 #ifdef _ESPSERIALBRIDGE_SUPPORT
-    espSerialBridge.enableClientConnect();
+              espSerialBridge.enableClientConnect();
 #endif
 
-    clearOtaFile();
-  }
+              clearOtaFile();
+            }
 
-  server.client().setNoDelay(true);
-  server.sendHeader("Location", "/");
-  server.send(303, "text/plain", "See Other");
-  httpRequestProcessed = true;
-}
+            server.client().setNoDelay(true);
+            server.sendHeader("Location", "/");
+            server.send(303, "text/plain", "See Other");
+            httpRequestProcessed = true;
+          }
 
 #ifdef ESP8266
-void EspSerialBridgeRequestHandler::httpHandleOTAatmega328Data(ESP8266WebServer& server) {
+          void EspSerialBridgeRequestHandler::httpHandleOTAatmega328Data(ESP8266WebServer & server) {
 #endif
 #ifdef ESP32
-void EspSerialBridgeRequestHandler::httpHandleOTAatmega328Data(WebServer& server) {
+            void EspSerialBridgeRequestHandler::httpHandleOTAatmega328Data(WebServer & server) {
 #endif
-  HTTPUpload& upload = server.upload();
+              HTTPUpload& upload = server.upload();
 
-  if (upload.status == UPLOAD_FILE_START) {
-    DBG_PRINT("httpHandleOTAatmega328Data: " + upload.filename);
-    DBG_FORCE_OUTPUT();
-  } else if (upload.status == UPLOAD_FILE_WRITE) {
-    // first block with data
-    if (upload.totalSize == 0) {
-        initOtaFile("/ota/atmega328.bin", "w");
-        intelHexFormatParser = new IntelHexFormatParser(&otaFile);
-    }
+              if (upload.status == UPLOAD_FILE_START) {
+                DBG_PRINT("httpHandleOTAatmega328Data: " + upload.filename);
+                DBG_FORCE_OUTPUT();
+              } else if (upload.status == UPLOAD_FILE_WRITE) {
+                // first block with data
+                if (upload.totalSize == 0) {
+                  initOtaFile("/ota/atmega328.bin", "w");
+                  intelHexFormatParser = new IntelHexFormatParser(&otaFile);
+                }
 
-    if (intelHexFormatParser == NULL)
-      return;
+                if (intelHexFormatParser == NULL)
+                  return;
 
-    DBG_PRINT(".");
-    if ((upload.totalSize % HTTP_UPLOAD_BUFLEN) == 20)
-      DBG_PRINTLN("\n");
+                DBG_PRINT(".");
+                if ((upload.totalSize % HTTP_UPLOAD_BUFLEN) == 20)
+                  DBG_PRINTLN("\n");
 
-    if (!intelHexFormatParser->parse(upload.buf, upload.currentSize)) {
-      DBG_PRINTLN("\nwriting file " + otaFileName + " failed!");
-      DBG_FORCE_OUTPUT();
+                if (!intelHexFormatParser->parse(upload.buf, upload.currentSize)) {
+                  DBG_PRINTLN("\nwriting file " + otaFileName + " failed!");
+                  DBG_FORCE_OUTPUT();
 
-      clearParser();
-      clearOtaFile();
-    }
-  } else if (upload.status == UPLOAD_FILE_END) {
-    if (otaFile) {
-      bool uploadComplete = (otaFile.size() == intelHexFormatParser->sizeBinaryData() && intelHexFormatParser->isEOF());
-      
-      DBG_PRINTF("\nend: %s (%d Bytes)\n", otaFile.name(), otaFile.size());
-      DBG_FORCE_OUTPUT();
-      otaFile.close();
-      
-      clearParser();
-      if (!uploadComplete)     
-        clearOtaFile();
-    }
-  } else if (upload.status == UPLOAD_FILE_ABORTED) {
-    DBG_PRINTF("\naborted\n");
-    DBG_FORCE_OUTPUT();
+                  clearParser();
+                  clearOtaFile();
+                }
+              } else if (upload.status == UPLOAD_FILE_END) {
+                if (otaFile) {
+                  bool uploadComplete = (otaFile.size() == intelHexFormatParser->sizeBinaryData() && intelHexFormatParser->isEOF());
 
-    clearParser();
-    clearOtaFile();
-  }
-}
+                  DBG_PRINTF("\nend: %s (%d Bytes)\n", otaFile.name(), otaFile.size());
+                  DBG_FORCE_OUTPUT();
+                  otaFile.close();
 
-bool EspSerialBridgeRequestHandler::initOtaFile(String filename, String mode) {
-  LittleFS.begin();
-  otaFile = LITTLittleFSLEFS.open(filename, mode.c_str());
+                  clearParser();
+                  if (!uploadComplete)
+                    clearOtaFile();
+                }
+              } else if (upload.status == UPLOAD_FILE_ABORTED) {
+                DBG_PRINTF("\naborted\n");
+                DBG_FORCE_OUTPUT();
 
-  if (otaFile)
-    otaFileName = filename;
+                clearParser();
+                clearOtaFile();
+              }
+            }
 
-  return otaFile;
-}
+            bool EspSerialBridgeRequestHandler::initOtaFile(String filename, String mode) {
+              LittleFS.begin();
+              otaFile = LITTLittleFSLEFS.open(filename, mode.c_str());
 
-void EspSerialBridgeRequestHandler::clearOtaFile() {
-  if (otaFile)
-    otaFile.close();
-  if (LittleFS.exists(otaFileName))
-    LittleFS.remove(otaFileName);
-  otaFileName = "";
-}
+              if (otaFile)
+                otaFileName = filename;
 
-void EspSerialBridgeRequestHandler::clearParser() {
-  if (intelHexFormatParser != NULL) {
-    free(intelHexFormatParser);
-    intelHexFormatParser = NULL;
-  }
-}
+              return otaFile;
+            }
+
+            void EspSerialBridgeRequestHandler::clearOtaFile() {
+              if (otaFile)
+                otaFile.close();
+              if (LittleFS.exists(otaFileName))
+                LittleFS.remove(otaFileName);
+              otaFileName = "";
+            }
+
+            void EspSerialBridgeRequestHandler::clearParser() {
+              if (intelHexFormatParser != NULL) {
+                free(intelHexFormatParser);
+                intelHexFormatParser = NULL;
+              }
+            }
 
 #endif  // _OTA_ATMEGA328_SERIAL
