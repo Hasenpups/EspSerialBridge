@@ -18,21 +18,14 @@
 //  #define _TARGET_ESP_01  // no gpio15 for serial use
 #endif
 
-#ifdef _OTA_ATMEGA328_SERIAL
-#include "IntelHexFormatParser.h"
-#include "FlashATMega328Serial.h"
-
-IntelHexFormatParser* intelHexFormatParser = NULL;
-#endif
-
 #include "EspConfig.h"
 #include "EspDebug.h"
 #include "EspSerialBridgeImpl.h"
 #include "EspWifi.h"
 #include "HelperHTML.h"
 
-#define PROGNAME "EspSerialBridge"
-#define PROGVERS "0.3.1"
+#define PROGNAME "ESP01 - Serial Bridge"
+#define PROGVERS "0.3.2"
 #define PROGBUILD String(__DATE__) + " " + String(__TIME__)
 
 bool httpRequestProcessed = false;
